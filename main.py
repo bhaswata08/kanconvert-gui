@@ -1,63 +1,53 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from src.kanconverter import process_line
-from src.file_reader import read_file
-from src.file_writer import write_file  # You'll need to create this module
+from src.docx_processor import convert_docx  # Import the convert_docx function from your original script
 
-class TextProcessorApp:
+class KannadaConverterGUI:
     def __init__(self, master):
         self.master = master
-        master.title("Text Processor")
-        master.geometry("500x300")
-
-        # Input text area
-        self.input_label = tk.Label(master, text="Input Text:")
-        self.input_label.pack()
-        self.input_text = tk.Text(master, height=10)
-        self.input_text.pack()
-
-        # Process and Save button
-        self.process_button = tk.Button(master, text="Process and Save", command=self.process_and_save)
-        self.process_button.pack()
-
-        # File selection button
-        self.file_button = tk.Button(master, text="Select File", command=self.select_file)
-        self.file_button.pack()
-
-    def process_and_save(self):
-        input_txt = self.input_text.get("1.0", tk.END).strip()
-        if input_txt:
-            processed_text = process_line(input_txt)
-            self.save_file(processed_text)
-        else:
-            messagebox.showwarning("Warning", "Please enter some text to process.")
-
-    def save_file(self, content):
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".txt",
-            filetypes=[("Text files", "*.txt"), ("Word files", "*.docx")]
-        )
-        if file_path:
-            try:
-                write_file(file_path, content)  # Use the write_file function
-                messagebox.showinfo("Success", f"File saved successfully: {file_path}")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to save file: {str(e)}")
-
+        self.master.title('Kannada ASCII to Unicode Converter')
+        self.master.geometry('400x200')
+        
+        self.input_file = None
+        
+        self.create_widgets()
+        
+    def create_widgets(self):
+        # Select File Button
+        self.select_file_button = tk.Button(self.master, text='Select File', command=self.select_file)
+        self.select_file_button.pack(pady=10)
+        
+        # File Label
+        self.file_label = tk.Label(self.master, text='No file selected')
+        self.file_label.pack(pady=5)
+        
+        # Process File Button
+        self.process_button = tk.Button(self.master, text='Process File', command=self.process_file, state=tk.DISABLED)
+        self.process_button.pack(pady=10)
+        
     def select_file(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Text files", "*.txt"), ("PDF files", "*.pdf"), ("Word files", "*.docx")])
-        if file_path:
+        self.input_file = filedialog.askopenfilename(filetypes=[("Word Documents", "*.docx")])
+        if self.input_file:
+            self.file_label.config(text=f"Selected file: {self.input_file}")
+            self.process_button.config(text=f"Process file: {self.input_file.split('/')[-1]}", state=tk.NORMAL)
+        
+    def process_file(self):
+        if not self.input_file:
+            return
+        
+        output_file = filedialog.asksaveasfilename(defaultextension=".docx", filetypes=[("Word Documents", "*.docx")])
+        
+        if output_file:
             try:
-                content = read_file(file_path)  # Use the read_file function
-                self.input_text.delete("1.0", tk.END)
-                self.input_text.insert(tk.END, content)
+                convert_docx(self.input_file, output_file)
+                messagebox.showinfo("Success", f"File successfully processed and saved at: {output_file}")
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to process file: {str(e)}")
+                messagebox.showerror("Error", f"An error occurred while processing the file: {str(e)}")
 
 def main():
     root = tk.Tk()
-    app = TextProcessorApp(root)
+    app = KannadaConverterGUI(root)
     root.mainloop()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
